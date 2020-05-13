@@ -11,6 +11,17 @@ impl VecExtensions for Vec<String> {
     }
 }
 
+pub trait OptionExtensions<T> {
+    fn as_some(self) -> Option<T>;
+}
+
+impl <T> OptionExtensions<T> for T
+{
+    fn as_some(self) -> Option<T> {
+        Some(self)
+    }
+}
+
 pub fn concat<T: Clone>(one: Vec<T>, two: Vec<T>) -> Vec<T> {
     [&one[..], &two[..]].concat()
 }
