@@ -1,32 +1,12 @@
-use std::cell::Cell;
 use std::collections::HashMap;
-use std::error::Error;
-use std::fs;
-use std::fs::{DirEntry, File, FileType, read_dir};
-use std::io::{BufRead, empty};
-use std::ops::Deref;
-use std::path::Path;
 
 use actix_web::{HttpResponse, middleware, web};
 use actix_web::{App, HttpServer};
-use actix_web::web::Json;
 use actix_web_static_files;
-use nom::branch::alt;
-use nom::bytes::complete::{tag, take_till, take_until, take_while};
-use nom::combinator::{map_parser, map_res};
-use nom::FindSubstring;
-use nom::IResult;
-use nom::sequence::preceded;
-use petgraph::algo::tarjan_scc;
-use petgraph::graphmap::DiGraphMap;
-use petgraph::prelude::DiGraph;
+use log::info;
 use serde::Serialize;
-use log::{info};
-use crate::AppError::IoError;
-use crate::error::AppError;
-use crate::utils::VecExtensions;
-use crate::model::{AnalysisResult, Class, Package};
-use crate::parsers::parse_package_under;
+
+use crate::model::{AnalysisResult, Package};
 
 async fn get_cycles(results: web::Data<AnalysisResult>) -> HttpResponse {
     HttpResponse::Ok().json(&results.cycles)
@@ -51,9 +31,9 @@ async fn get_graph_for_cycle(results: web::Data<AnalysisResult>, cycle: web::Pat
 async fn get_complete_graph(results: web::Data<AnalysisResult>) -> HttpResponse {
     let response: Vec<PackageResponse> = results.packages.iter()
         .map(|p| PackageResponse {
-        name: p.name.clone(),
-        uses: p.other_used_packages.clone(),
-    }).collect();
+            name: p.name.clone(),
+            uses: p.other_used_packages.clone(),
+        }).collect();
     HttpResponse::Ok().json(response)
 }
 

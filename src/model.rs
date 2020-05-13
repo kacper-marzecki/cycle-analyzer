@@ -1,5 +1,4 @@
 use serde::Serialize;
-use petgraph::graphmap::{GraphMap, DiGraphMap};
 
 #[derive(Debug)]
 pub struct Class {

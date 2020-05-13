@@ -1,10 +1,8 @@
 use nom::branch::alt;
-use nom::bytes::complete::{tag, take, take_till, take_until, take_while};
-use nom::combinator::{flat_map, map, map_parser, map_parserc, map_res, rest};
-use nom::FindSubstring;
+use nom::bytes::complete::{tag, take_until};
+use nom::combinator::{map_parser, rest};
 use nom::IResult;
 use nom::sequence::preceded;
-use nom::error;
 
 fn has_import_prefix(input: &str) -> IResult<&str, &str> {
     alt((
@@ -17,14 +15,10 @@ fn take_till_semicolon(input: &str) -> IResult<&str, &str> {
     take_until(";")(input)
 }
 
-fn begins_with<'a>(input: &'a str, chars: &'a str) -> IResult<&'a str, &'a str> {
-    tag(chars)(input)
-}
-
 fn find_import<'a>(input: &'a str, target_package: &'a str) -> IResult<&'a str, &'a str> {
     let import_line = map_parser(
         preceded(has_import_prefix, rest),
-        preceded(tag(target_package), rest)
+        preceded(tag(target_package), rest),
     );
     map_parser(import_line, take_till_semicolon)(input)
 }
@@ -32,7 +26,7 @@ fn find_import<'a>(input: &'a str, target_package: &'a str) -> IResult<&'a str, 
 pub fn parse_line_for_package_import(line: String, package: &str) -> Option<String> {
     find_import(&line[..], package)
         .ok()
-        .map(|(input, output)| format!("{}{}", package, output))
+        .map(|(_, output)| format!("{}{}", package, output))
 }
 
 pub fn parse_package_under(package_name: &String, base_package: &String) -> Option<String> {
@@ -43,7 +37,7 @@ pub fn parse_package_under(package_name: &String, base_package: &String) -> Opti
             take_until("."),
         )(package_name);
     result.ok()
-        .map(|(input, output)| output.to_string())
+        .map(|(_, output)| output.to_string())
 }
 
 #[cfg(test)]
@@ -92,7 +86,7 @@ mod tests {
     fn parse_package_under_works() {
         let package_name = "com.acme.something.else";
         let base_package = "com.acme";
-        let result= parse_package_under(&package_name.to_string(), &base_package.to_string()).unwrap();
+        let result = parse_package_under(&package_name.to_string(), &base_package.to_string()).unwrap();
         assert_eq!(result, "something");
     }
 }

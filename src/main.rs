@@ -1,33 +1,20 @@
-use std::cell::Cell;
-use std::error::Error;
-use std::fs;
-use std::fmt::{Display, Debug};
-use std::fs::{DirEntry, File, FileType, read_dir, ReadDir};
-use std::io::{BufRead, empty};
-use std::ops::Deref;
-use std::path::{Path, PathBuf};
-use structopt::StructOpt;
-use log::{info};
-use actix_web::{HttpResponse, middleware, web};
-use actix_web::web::Json;
-use nom::branch::alt;
-use nom::bytes::complete::{tag, take_till, take_until, take_while};
-use nom::combinator::{map_parser, map_res};
-use nom::FindSubstring;
-use nom::IResult;
-use nom::sequence::preceded;
-use petgraph::algo::tarjan_scc;
-use petgraph::graphmap::{DiGraphMap};
-use petgraph::prelude::DiGraph;
-use serde::Serialize;
 use std::convert::{AsRef, identity};
-use crate::AppError::IoError;
-use crate::utils::VecExtensions;
-use crate::parsers::parse_package_under;
-use crate::model::{Package, AnalysisResult, Class};
-use crate::error::AppError;
-use crate::server::start_server;
+use std::fmt::Debug;
+use std::fs::{self, DirEntry, File, ReadDir};
+use std::io::BufRead;
+use std::path::Path;
+
+use log::info;
+use petgraph::algo::tarjan_scc;
+use petgraph::graphmap::DiGraphMap;
+use structopt::StructOpt;
+
 use crate::configuration::Configuration;
+use crate::error::AppError;
+use crate::model::{AnalysisResult, Package};
+use crate::parsers::parse_package_under;
+use crate::server::start_server;
+use crate::utils::VecExtensions;
 
 mod parsers;
 mod utils;
@@ -84,14 +71,14 @@ fn file_name(d: &DirEntry) -> String {
 fn run_analysis(project_path: String, target_package: String) -> Result<AnalysisResult, AppError> {
     let root_package = target_package.replace(".", "/");
     let root_filepath = format!("{}/src/main/java/{}", project_path, root_package);
-    let mut packages: Vec<Package> =
+    let packages: Vec<Package> =
         read_or_panik(&root_filepath)
             .filter(is_dir)
             .filter_map(|it| it.ok())
             .filter_map(|dir| {
                 let file_name = file_name(&dir);
                 let full_package_name = format!("{}.{}", target_package, file_name.clone());
-                let mut foreign_imports =
+                let foreign_imports =
                     extract_imports(target_package.as_str(), dir).into_iter()
                         .filter(|it| !it.starts_with(&full_package_name))
                         .collect::<Vec<String>>()
