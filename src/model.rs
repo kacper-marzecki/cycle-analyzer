@@ -16,6 +16,12 @@ pub struct Package {
 
 #[derive(Debug, Clone)]
 pub struct AnalysisResult {
-    pub cycles: Vec<Vec<String>>,
+    pub cycles: Vec<Cycle>,
     pub packages: Vec<Package>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct Cycle {
+    pub new_cycle: bool,
+    pub packages: Vec<String>
 }

@@ -4,12 +4,26 @@ use actix_web::{HttpResponse, middleware, web};
 use actix_web::{App, HttpServer};
 use actix_web_static_files;
 use log::info;
-use serde::Serialize;
+use serde::{Serialize};
 
-use crate::model::{AnalysisResult, Package};
+use crate::model::{AnalysisResult, Package, Cycle};
+
+#[derive(Debug, Clone, Serialize)]
+struct CycleResponse<'a> {
+    pub packages: &'a Vec<String>,
+    pub new_cycle: bool,
+    pub id: usize
+}
+
 
 async fn get_cycles(results: web::Data<AnalysisResult>) -> HttpResponse {
-    HttpResponse::Ok().json(&results.cycles)
+    HttpResponse::Ok().json(
+        results.cycles.iter().enumerate().map(|(index, it) | CycleResponse {
+            packages: &it.packages,
+            new_cycle: it.new_cycle,
+            id: index
+        }).collect::<Vec<CycleResponse>>()
+    )
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -19,11 +33,11 @@ struct PackageResponse {
 }
 
 async fn get_graph_for_cycle(results: web::Data<AnalysisResult>, cycle: web::Path<usize>) -> HttpResponse {
-    let cycle: &Vec<String> = results.cycles.get(cycle.into_inner()).unwrap();
+    let cycle: &Cycle = results.cycles.get(cycle.into_inner()).unwrap();
     let response: Vec<PackageResponse> = results.packages.iter()
-        .filter(|p| cycle.contains(&p.name)).map(|p| PackageResponse {
+        .filter(|p| cycle.packages.contains(&p.name)).map(|p| PackageResponse {
         name: p.name.clone(),
-        uses: p.other_used_packages.clone().into_iter().filter(|p| cycle.contains(p)).collect(),
+        uses: p.other_used_packages.clone().into_iter().filter(|p| cycle.packages.contains(p)).collect(),
     }).collect();
     HttpResponse::Ok().json(response)
 }

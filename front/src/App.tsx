@@ -10,18 +10,25 @@ import {graphConfig} from "./Config";
 interface State {
     cycles: CycleList,
     graphData: GraphData,
-    description: Array<ImportInfo>
+    description: Array<ImportInfo>,
+    show_only_new_cycles: boolean
 }
 
 function App() {
     let [state, setState] = useState<State>({
         cycles: [],
         graphData: {nodes: [], links: []},
-        description: []
-    })
+        description: [],
+        show_only_new_cycles: false
+    });
+
     useEffect(() => {
         getCycleList().then(_ => setState(s => ({...s, cycles: _})))
     }, [])
+
+    const toggle_show_only_new_cycles = () => {
+        setState(s => ({...s, show_only_new_cycles: !s.show_only_new_cycles}))
+    }
 
     const onClickLink = (source: string, target: string) => {
         const pairs = state.graphData.links.find(_ => _.source === target && _.target === source) === undefined
@@ -48,15 +55,17 @@ function App() {
             .then(_ => setState({...state, graphData: _}))
     }
 
-    function cycleList(cycles: CycleList): JSX.Element[] {
-        return cycles.map((it, index) => <a
-                        key={index}
-                        href="/#"
-                        className="list-item"
-                        onClick={_ => cycleClicked(index)}>
-                        {it.length} item cycle
-                    </a>
-                )
+    function cycleList(cycles: CycleList, showOnlyNewCycles: boolean): JSX.Element[] {
+        return cycles
+            .filter(it => showOnlyNewCycles ? it.new_cycle : true)
+            .map((it ) => <a
+                    key={it.id}
+                    href="/#"
+                    className="list-item"
+                    onClick={_ => cycleClicked(it.id)}>
+                    {it.packages.length} item cycle
+                </a>
+            )
     }
 
     const showCompleteGraphClicked = () => {
@@ -71,6 +80,14 @@ function App() {
             <div className="">
                 <div className="columns is-marginless">
                     <div className="column is-one-fifth">
+                        <div className="field">
+                            <input
+                                type="checkbox"
+                                checked={state.show_only_new_cycles}
+                                onChange={_ => toggle_show_only_new_cycles()}
+                            />
+                            <label>Show only new cycles</label>
+                        </div>
                         <div className="list">
                             <a
                                 key="complete-graph"
@@ -79,7 +96,7 @@ function App() {
                                 onClick={_ => showCompleteGraphClicked()}>
                                 Complete dependency graph
                             </a>
-                            {cycleList(state.cycles)}
+                            {cycleList(state.cycles, state.show_only_new_cycles)}
                         </div>
                     </div>
                     <div className="column">

@@ -11,7 +11,7 @@ use structopt::StructOpt;
 
 use crate::configuration::Configuration;
 use crate::error::AppError;
-use crate::model::{AnalysisResult, Package};
+use crate::model::{AnalysisResult, Package, Cycle};
 use crate::parsers::parse_package_under;
 use crate::server::start_server;
 use crate::utils::{OptionExtensions, VecExtensions};
@@ -96,14 +96,24 @@ fn collect_package_info(project_path: String, target_package: String) -> Vec<Pac
         .collect()
 }
 
-fn run_analysis(project_path: String, target_package: String) -> Result<AnalysisResult, AppError> {
+fn run_analysis(project_path: String, target_package: String, ignored_cycles: Vec<Vec<String>>) -> Result<AnalysisResult, AppError> {
     let packages = collect_package_info(project_path, target_package);
     let graph = construct_graph(&packages);
     let components = tarjan_scc(&graph);
 
-    let cycles: Vec<Vec<String>> = components.into_iter().filter(|it| it.len() > 1)
-        .map(|vec| vec.into_iter().map(|package| package.to_string()).collect())
+    let cycles: Vec<Cycle> = components.into_iter().filter(|it| it.len() > 1)
+        .map(|vec: Vec<&str> | {
+            let packages = vec.iter().map(|package| package.to_string()).collect();
+            Cycle {
+                new_cycle: !ignored_cycles.contains(&packages),
+                packages,
+            }
+        })
         .collect();
+    // let new_cycles :Vec<Vec<String>> = cycles.iter()
+    //     .filter(|it| ! ignored_cycles.contains(it))
+    //     .map(|it| it.clone())
+    //     .collect();
     Ok(AnalysisResult {
         packages,
         cycles,
@@ -121,14 +131,25 @@ fn construct_graph(packages: &Vec<Package>) -> DiGraphMap<&str, &str> {
     graph
 }
 
+fn parse_ignored_cycles(file: &String)-> Vec<Vec<String>> {
+    read_lines(&file.as_str())
+        .map(|line| line.expect("cannot read ignored cycles file").split(",").map(&str::to_string).collect())
+        .collect()
+}
+
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "arch_ferrite=info,actix_web=info");
     env_logger::init();
     let configuration: Configuration = Configuration::from_args();
-
+    let ignored_cycles : Vec<Vec<String>> = if let Some(ignore_file) = &configuration.ignored_cycles_file {
+        parse_ignored_cycles(ignore_file)
+    }  else {
+        vec![]
+    };
     info!("Running analysis with: {:#?}", configuration);
-    let analysis = run_analysis(configuration.project_location, configuration.root_package).unwrap();
+    let analysis = run_analysis(configuration.project_location, configuration.root_package, ignored_cycles).unwrap();
+
     if configuration.server {
         start_server(analysis, configuration.port).await
     } else {

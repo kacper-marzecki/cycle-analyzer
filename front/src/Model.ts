@@ -9,7 +9,13 @@ export interface Package {
     uses: Array<string>
 }
 
-export type CycleList = Array<Array<string>>;
+export interface Cycle {
+    packages: Array<string>,
+    new_cycle: boolean,
+    id: number
+}
+
+export type CycleList = Array<Cycle>;
 
 export interface GraphData {
     nodes: Array<{ id: string }>,
