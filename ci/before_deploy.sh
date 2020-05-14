@@ -1,11 +1,7 @@
-# This script takes care of building your crate and packaging it for release
-
 set -ex
-
 main() {
     local src=$(pwd) \
           stage=
-
     case $TRAVIS_OS_NAME in
         linux)
             stage=$(mktemp -d)
@@ -17,10 +13,10 @@ main() {
 
     test -f Cargo.lock || cargo generate-lockfile
 
-    # TODO Update this to build the artifacts that matter to you
+    # CUSTOM
     cross rustc --bin arch-ferrite --target $TARGET --release -- -C lto
 
-    # TODO Update this to package the right artifacts
+    # CUSTOM
     cp target/$TARGET/release/arch-ferrite* $stage/
 
     cd $stage

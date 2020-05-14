@@ -1,8 +1,6 @@
-# This script takes care of testing your crate
-
 set -ex
 
-# TODO This is the "test phase", tweak it as you see fit
+# CUSTOM test phase
 main() {
     cross build --target $TARGET
     cross build --target $TARGET --release
@@ -13,9 +11,6 @@ main() {
 
     cross test --target $TARGET
     cross test --target $TARGET --release
-
-#    cross run --target $TARGET
-#    cross run --target $TARGET --release
 }
 
 # we don't run the "test phase" when doing deploys
