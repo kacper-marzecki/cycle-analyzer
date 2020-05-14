@@ -6,6 +6,7 @@ import {Graph} from "react-d3-graph";
 import {getCompleteGraph, getCycleList, getGraphForCycle, getImportsFromTo} from "./ApiClient";
 import {CycleList, GraphData, ImportInfo, Package} from "./Model";
 import {graphConfig} from "./Config";
+import {GraphComponent} from "./GraphComponent";
 
 interface State {
     cycles: CycleList,
@@ -102,13 +103,10 @@ function App() {
                     <div className="column">
                         {state.graphData.nodes.length === 0
                             ? undefined
-                            : <div style={{border: "black", borderWidth: 1, borderStyle: "dashed"}}>
-                                <Graph
-                                    id="cycle-graph"
-                                    data={state.graphData}
-                                    config={graphConfig}
-                                    onClickLink={onClickLink}/>
-                            </div>
+                            : <GraphComponent
+                                graphType={1}
+                                data={state.graphData}
+                                onLinkClick={onClickLink}/>
                         }
                     </div>
                 </div>
