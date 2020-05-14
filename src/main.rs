@@ -102,7 +102,7 @@ fn run_analysis(project_path: String, target_package: String, ignored_cycles: Ve
     let components = tarjan_scc(&graph);
 
     let cycles: Vec<Cycle> = components.into_iter().filter(|it| it.len() > 1)
-        .map(|vec: Vec<&str> | {
+        .map(|vec: Vec<&str>| {
             let packages = vec.iter().map(|package| package.to_string()).collect();
             Cycle {
                 new_cycle: !ignored_cycles.contains(&packages),
@@ -110,10 +110,6 @@ fn run_analysis(project_path: String, target_package: String, ignored_cycles: Ve
             }
         })
         .collect();
-    // let new_cycles :Vec<Vec<String>> = cycles.iter()
-    //     .filter(|it| ! ignored_cycles.contains(it))
-    //     .map(|it| it.clone())
-    //     .collect();
     Ok(AnalysisResult {
         packages,
         cycles,
@@ -131,7 +127,7 @@ fn construct_graph(packages: &Vec<Package>) -> DiGraphMap<&str, &str> {
     graph
 }
 
-fn parse_ignored_cycles(file: &String)-> Vec<Vec<String>> {
+fn parse_ignored_cycles(file: &String) -> Vec<Vec<String>> {
     read_lines(&file.as_str())
         .map(|line| line.expect("cannot read ignored cycles file").split(",").map(&str::to_string).collect())
         .collect()
@@ -142,17 +138,22 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "arch_ferrite=info,actix_web=info");
     env_logger::init();
     let configuration: Configuration = Configuration::from_args();
-    let ignored_cycles : Vec<Vec<String>> = if let Some(ignore_file) = &configuration.ignored_cycles_file {
+    let ignored_cycles: Vec<Vec<String>> = if let Some(ignore_file) = &configuration.ignored_cycles_file {
         parse_ignored_cycles(ignore_file)
-    }  else {
+    } else {
         vec![]
     };
     info!("Running analysis with: {:#?}", configuration);
     let analysis = run_analysis(configuration.project_location, configuration.root_package, ignored_cycles).unwrap();
-
-    if configuration.server {
-        start_server(analysis, configuration.port).await
+    let new_cycles :Vec<&Cycle> = analysis.cycles.iter().filter(|it| it.new_cycle).collect();
+    if !new_cycles.is_empty() {
+        if configuration.server {
+            start_server(analysis, configuration.port).await
+        } else {
+            panic!("Cyclic dependencies detected: {:?}", analysis.cycles)
+        }
     } else {
+        info!("No new cycles.");
         Ok(())
     }
 }
