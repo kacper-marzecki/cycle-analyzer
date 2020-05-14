@@ -1,0 +1,75 @@
+# Based on the "trust" template v0.1.2
+# https://github.com/japaric/trust/tree/v0.1.2
+
+dist: trusty
+language: rust
+services: docker
+sudo: required
+
+# TODO Rust builds on stable by default, this can be
+# overridden on a case by case basis down below.
+
+env:
+  global:
+    # TODO Update this to match the name of your project.
+    - CRATE_NAME=trust
+
+matrix:
+  # TODO These are all the build jobs. Adjust as necessary. Comment out what you
+  # don't need
+  include:
+    # Linux
+    - env: TARGET=x86_64-unknown-linux-gnu
+
+    # Windows
+    - env: TARGET=x86_64-pc-windows-gnu
+
+before_install:
+  - set -e
+  - rustup self update
+
+install:
+  - sh ci/install.sh
+  - source ~/.cargo/env || true
+
+script:
+  - bash ci/script.sh
+
+after_script: set +e
+
+before_deploy:
+  - sh ci/before_deploy.sh
+
+deploy:
+  # TODO update `api_key.secure`
+  # - Create a `public_repo` GitHub token. Go to: https://github.com/settings/tokens/new
+  # - Encrypt it: `travis encrypt 0123456789012345678901234567890123456789
+  # - Paste the output down here
+  api_key:
+    secure: GM8bnvPB2RR2qHkbSD+p7FzCVIGAOH/a5GrxPr+JRyOjJOw/HSi6RYHNh42xY6LbouW6MrlQb7vughTUcnBJS3fEvSm+x1TjFGlSCJRfci5Uxs2QtXGC0wbVLydgwv49s87zCVuAA9XaT9lzG6KbK3QixFkhNUPb8ljJ66+0i+Stk65VGT13aRI2WfCRJlHBqAVPiKUlQrEBpR5sjyQJBp7PSBwMYzRgQ7Lz3EJ0ozgZCyJKrjwWMCjKb4omj8yMIF4pcgIM/DKAJnsVJyHIKrSjOmbAD+6D7tMn9vucIJK8qx7U9zN4XePVyMyWlsaXpLz15PB3XySdE8Itt4zt+gFhj9I0HlTaiZtPYlsZlOyg1ayxG7dZVhCL+c4LY8wSKDSnRjnQRWVCKcK8WZfVqE39eoqy/3T2hzbI/D2wKxo//vZqYs3+DHPiYtXYzHn3Wn1M+qUxQd9C7W9V1SpVleXrkPz4L8EToM7MXq/rQeDWnnq2qTREG7yU/ZGYD1KFVIOpzIJ22GuhOuUpq2jZ2CuRk7+LmHdiNJl1Rjp3+h0n+VyoAzh5SOPQm6KtAFZGH1uBbKIroDZAhzDO8jk2gnHyd4BbYiqT+KKXBe8iOSp47h6PfYIMEWb0z9BdjJqcpaitCWK1Aw7MYy2VgJzTKHY4KY9BftNEqmwN5uj4uWk=
+  file_glob: true
+  file: $CRATE_NAME-$TRAVIS_TAG-$TARGET.*
+  on:
+    # TODO Here you can pick which targets will generate binary releases
+    # In this example, there are some targets that are tested using the stable
+    # and nightly channels. This condition makes sure there is only one release
+    # for such targets and that's generated using the stable channel
+    condition: $TRAVIS_RUST_VERSION = stable
+    tags: true
+  provider: releases
+  skip_cleanup: true
+
+cache: cargo
+before_cache:
+  # Travis can't cache files that are not readable by "others"
+  - chmod -R a+r $HOME/.cargo
+
+branches:
+  only:
+    # release tags
+    - /^v\d+\.\d+\.\d+.*$/
+    - master
+
+notifications:
+  email:
+    on_success: never
