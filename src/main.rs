@@ -126,6 +126,7 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "arch_ferrite=info,actix_web=info");
     env_logger::init();
     let configuration: Configuration = Configuration::from_args();
+
     info!("Running analysis with: {:#?}", configuration);
     let analysis = run_analysis(configuration.project_location, configuration.root_package).unwrap();
     if configuration.server {
