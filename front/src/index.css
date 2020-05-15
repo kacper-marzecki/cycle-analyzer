@@ -11,3 +11,10 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+.graph {
+  min-width: 500px;
+  min-height: 500px;
+}
+.column {
+  position: static;
+}

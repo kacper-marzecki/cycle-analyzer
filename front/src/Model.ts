@@ -21,3 +21,9 @@ export interface GraphData {
     nodes: Array<{ id: string }>,
     links: Array<{ source: string, target: string }>
 }
+
+export enum GraphType {
+    D3 = "D3",
+    CYTOSCAPE = "Cytoscape",
+    VIS = "Vis.js",
+}

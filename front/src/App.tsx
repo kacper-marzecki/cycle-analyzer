@@ -2,10 +2,8 @@ import React, {useEffect, useState} from 'react';
 import './App.css';
 import 'bulma/css/bulma.css'
 import {Navbar} from "./Navbar";
-import {Graph} from "react-d3-graph";
 import {getCompleteGraph, getCycleList, getGraphForCycle, getImportsFromTo} from "./ApiClient";
-import {CycleList, GraphData, ImportInfo, Package} from "./Model";
-import {graphConfig} from "./Config";
+import {CycleList, GraphData, GraphType, ImportInfo, Package} from "./Model";
 import {GraphComponent} from "./GraphComponent";
 
 interface State {
@@ -13,6 +11,7 @@ interface State {
     graphData: GraphData,
     description: Array<ImportInfo>,
     show_only_new_cycles: boolean
+    graphType: GraphType
 }
 
 function App() {
@@ -20,7 +19,8 @@ function App() {
         cycles: [],
         graphData: {nodes: [], links: []},
         description: [],
-        show_only_new_cycles: false
+        show_only_new_cycles: false,
+        graphType: GraphType.VIS
     });
 
     useEffect(() => {
@@ -29,6 +29,9 @@ function App() {
 
     const toggle_show_only_new_cycles = () => {
         setState(s => ({...s, show_only_new_cycles: !s.show_only_new_cycles}))
+    }
+    const changeGraphType = (type: GraphType) => {
+        setState(s => ({...s, graphType: type, description: [] }))
     }
 
     const onClickLink = (source: string, target: string) => {
@@ -59,7 +62,7 @@ function App() {
     function cycleList(cycles: CycleList, showOnlyNewCycles: boolean): JSX.Element[] {
         return cycles
             .filter(it => showOnlyNewCycles ? it.new_cycle : true)
-            .map((it ) => <a
+            .map((it) => <a
                     key={it.id}
                     href="/#"
                     className="list-item"
@@ -81,6 +84,11 @@ function App() {
             <div className="">
                 <div className="columns is-marginless">
                     <div className="column is-one-fifth">
+                        <div className="select" >
+                            <select value={state.graphType} onChange={(e) => changeGraphType(e.target.value as GraphType)} >
+                                {Object.values(GraphType).map((key :string) => <option key={key} >{key}</option>)}
+                            </select>
+                        </div>
                         <div className="field">
                             <input
                                 type="checkbox"
@@ -101,17 +109,14 @@ function App() {
                         </div>
                     </div>
                     <div className="column">
-                        {state.graphData.nodes.length === 0
-                            ? undefined
-                            : <GraphComponent
-                                graphType={1}
-                                data={state.graphData}
-                                onLinkClick={onClickLink}/>
-                        }
+                        <GraphComponent
+                            graphType={state.graphType}
+                            data={state.graphData}
+                            onLinkClick={onClickLink}/>
                     </div>
                 </div>
                 <div className="columns" style={{marginLeft: "auto"}}>
-                    {state.description.map(_ => <div className="column">
+                    {state.description.map(_ => <div key={_.from} className="column">
                         <table className="table">
                             <thead>
                             <tr>
@@ -119,7 +124,7 @@ function App() {
                             </tr>
                             </thead>
                             <tbody>
-                            {_.imports.map(i => <tr className="has-text-left">{i}</tr>)}
+                            {_.imports.map(i => <tr key={i} className="has-text-left"><td>{i}</td></tr>)}
                             </tbody>
                         </table>
                     </div>)}
