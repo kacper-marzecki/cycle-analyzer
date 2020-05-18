@@ -40,10 +40,10 @@ function App() {
             : [[target, source], [source, target]];
         const promises = pairs.map(_ => getImportsFromTo(_[0], _[1]));
         Promise.all(promises)
-            .then(_ => setState({
-                ...state,
+            .then(_ => setState(s =>({
+                ...s,
                 description: _.map(it => ({from: it.from, to: it.to, imports: it.imports}))
-            }));
+            })));
     };
 
     const constructGraphDataFromPackages = (packages: Array<Package>): GraphData => {
