@@ -14,10 +14,10 @@ main() {
     test -f Cargo.lock || cargo generate-lockfile
 
     # CUSTOM
-    cross rustc --bin arch-ferrite --target $TARGET --release -- -C lto
+    cross rustc --bin cycle-analyzer --target $TARGET --release -- -C lto
 
     # CUSTOM
-    cp target/$TARGET/release/arch-ferrite* $stage/
+    cp target/$TARGET/release/cycle-analyzer* $stage/
 
     cd $stage
     tar czf $src/$CRATE_NAME-$TRAVIS_TAG-$TARGET.tar.gz *

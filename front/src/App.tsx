@@ -56,7 +56,7 @@ function App() {
     const cycleClicked = (cycleIndex: number) => {
         getGraphForCycle(cycleIndex)
             .then(constructGraphDataFromPackages)
-            .then(_ => setState({...state, graphData: _}))
+            .then(_ => setState(s => ({...s, graphData: _})))
     }
 
     function cycleList(cycles: CycleList, showOnlyNewCycles: boolean): JSX.Element[] {
@@ -75,7 +75,7 @@ function App() {
     const showCompleteGraphClicked = () => {
         getCompleteGraph()
             .then(constructGraphDataFromPackages)
-            .then(_ => setState({...state, graphData: _}))
+            .then(_ => setState(s=> ({...s, graphData: _})))
     }
 
     return (

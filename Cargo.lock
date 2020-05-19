@@ -304,24 +304,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b585a98a234c46fc563103e9278c9391fde1f4e6850334da895d27edb9580f62"
 
 [[package]]
-name = "arch-ferrite"
-version = "0.1.0"
-dependencies = [
- "actix-rt",
- "actix-service",
- "actix-web",
- "actix-web-static-files",
- "env_logger",
- "json",
- "log",
- "nom",
- "petgraph",
- "serde",
- "serde_json",
- "structopt",
-]
-
-[[package]]
 name = "arrayvec"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -516,6 +498,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba125de2af0df55319f41944744ad91c71113bf74a4646efff39afe1f6842db1"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "cycle-analyzer"
+version = "0.1.0"
+dependencies = [
+ "actix-rt",
+ "actix-service",
+ "actix-web",
+ "actix-web-static-files",
+ "env_logger",
+ "json",
+ "log",
+ "nom",
+ "petgraph",
+ "serde",
+ "serde_json",
+ "structopt",
 ]
 
 [[package]]

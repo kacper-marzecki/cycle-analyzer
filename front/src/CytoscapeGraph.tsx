@@ -89,11 +89,12 @@ export default function CytoscapeGraph(props: {
                 wheelSensitivity: 0.2,
                 container: container.current
             });
-            graph.current?.on("click", "edge", (it: any) => {
-                let edge = it.target._private.data;
-                onLinkClick(edge.source, edge.target);
-            });
         }
+        graph.current?.off("click", "edge");
+        graph.current?.on("click", "edge", (it: any) => {
+            let edge = it.target._private.data;
+            onLinkClick(edge.source, edge.target);
+        });
         // eslint-disable-next-line
     }, [data, onLinkClick]);
 
