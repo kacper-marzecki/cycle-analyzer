@@ -135,7 +135,7 @@ fn parse_ignored_cycles(file: &String) -> Vec<Vec<String>> {
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-    std::env::set_var("RUST_LOG", "arch_ferrite=info,actix_web=info");
+    std::env::set_var("RUST_LOG", "cycle_analyzer=info,actix_web=info");
     env_logger::init();
     let configuration: Configuration = Configuration::from_args();
     let ignored_cycles: Vec<Vec<String>> = if let Some(ignore_file) = &configuration.ignored_cycles_file {
